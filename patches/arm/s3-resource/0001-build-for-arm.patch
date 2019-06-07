@@ -16,13 +16,13 @@ index 9414382..96f81bc 100644
 @@ -1 +1,2 @@
  Dockerfile
 +.git
-diff --git a/Dockerfile b/Dockerfile
+diff --git a/dockerfiles/alpine/Dockerfile b/dockerfiles/alpine/Dockerfile
 index 768c6a0..914502d 100644
---- a/Dockerfile
-+++ b/Dockerfile
+--- a/dockerfiles/alpine/Dockerfile
++++ b/dockerfiles/alpine/Dockerfile
 @@ -1,4 +1,6 @@
 -FROM golang:alpine as builder
-+FROM resin/armv7hf-alpine-golang as builder
++FROM balenalib/armv7hf-alpine-golang as builder
 +COPY ./qemu-arm-static-3.0.0 /usr/bin/qemu-arm-static
 +RUN [ "cross-build-start" ]
  COPY . /go/src/github.com/concourse/s3-resource
@@ -33,16 +33,16 @@ index 768c6a0..914502d 100644
  		go test -o "/tests/$(basename $pkg).test" -c $pkg; \
  	done
 +RUN [ "cross-build-end" ]
- 
+
 -FROM alpine:edge AS resource
-+FROM resin/armv7hf-alpine:edge AS resource
++FROM balenalib/armv7hf-alpine:edge AS resource
 +COPY ./qemu-arm-static-3.0.0 /usr/bin/qemu-arm-static
 +RUN [ "cross-build-start" ]
  RUN apk add --no-cache bash tzdata ca-certificates unzip zip gzip tar
  COPY --from=builder assets/ /opt/resource/
  RUN chmod +x /opt/resource/*
 +RUN [ "cross-build-end" ]
- 
+
  FROM resource AS tests
 +RUN [ "cross-build-start" ]
  ARG S3_TESTING_ACCESS_KEY_ID
@@ -53,8 +53,7 @@ index 768c6a0..914502d 100644
  		$test; \
  	done
 +RUN [ "cross-build-end" ]
- 
- FROM resource
--- 
-2.18.0
 
+ FROM resource
+--
+2.18.0

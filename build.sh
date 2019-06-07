@@ -4,9 +4,9 @@ set -e
 
 VERSION="v3.14.1"
 
-usage() { echo "Usage: $0 -a <arm|aarch64> [-v]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 -a <arm|aarch64> -o <linux|darwin> [-v]" 1>&2; exit 1; }
 
-while getopts ":a:v" opt; do
+while getopts ":a:o:v" opt; do
 	case ${opt} in
 		a)
 			arch=${OPTARG}
@@ -14,6 +14,14 @@ while getopts ":a:v" opt; do
 				export GOARCH=arm
 			elif [ "$arch" == "aarch64" ]; then
 				export GOARCH=arm64
+			else
+				usage
+			fi
+			;;
+		o)
+			os=${OPTARG}
+			if [[ "$os" == "linux" ]]; then
+				export GOOS=linux
 			else
 				usage
 			fi
@@ -48,7 +56,7 @@ build_resource_type() {
 
 		cp "$base/qemu-$arch-static-3.0.0" .
 
-		docker build -t "$name-resource" .
+		docker build -t "$name-resource" -f ./dockerfiles/alpine/Dockerfile .
 		container_id=$(docker create "$name-resource")
 		docker export "$container_id" | gzip > "$workdir/resources/$name-resource-deadbeef.tar.gz"
 		docker rm "$container_id"
@@ -70,7 +78,7 @@ pushd "$workdir"
 	# get garden-runc
 	garden_tag="v1.16.2"
 	[ -d "garden-runc-release" ] || git clone --branch "$garden_tag" --recursive 'https://github.com/cloudfoundry/garden-runc-release'
-	find garden-runc-release -path '*/vendor/golang.org/x/net/trace' -print0 | xargs -0 --no-run-if-empty -n1 rm -r
+	find garden-runc-release -path '*/vendor/golang.org/x/net/trace' -print0 | xargs -0 -n1 rm -r
 	pushd ./garden-runc-release/src/code.cloudfoundry.org/guardian
 		git reset --hard
 		for patch in "$base/patches/$arch/guardian/"*; do
@@ -100,7 +108,7 @@ pushd "$workdir"
 	build_resource_type "docker-image"
 	build_resource_type "git"
 	build_resource_type "s3"
-	build_resource_type "time"
+	# build_resource_type "time"
 
 	mkdir -p concourse/blobs
 	rm -rf concourse/blobs/resources
