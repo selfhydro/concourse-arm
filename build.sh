@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="v3.14.1"
+VERSION="v5.2.0"
 
 usage() { echo "Usage: $0 -a <arm|aarch64> -o <linux|darwin> [-v]" 1>&2; exit 1; }
 
