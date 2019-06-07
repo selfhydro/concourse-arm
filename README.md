@@ -20,7 +20,13 @@ To make an aarch64 build run:
 ./build.sh -a aarch64
 ```
 
+If running on MacOS you can specify to build a linux version by using `-o linux` rather than getting a darwin build.
+
 You can also add the `-v` flag if you want debug output.
+
+### Note
+
+Docker requires around 2GB of memory to build the concourse image so make sure that docker has access to more than 2GB of memory.
 
 ### Missing features
 
