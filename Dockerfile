@@ -1,11 +1,4 @@
-FROM ubuntu:bionic AS ubuntu
-
-FROM ubuntu AS assets
-COPY ./linux-rc/*.tgz /tmp
-RUN tar xzf /tmp/*tgz -C /usr/local
-
-
-FROM ubuntu
+FROM arm32v7/debian
 
 # 'web' keys
 ENV CONCOURSE_SESSION_SIGNING_KEY     /concourse-keys/session_signing_key
@@ -27,7 +20,7 @@ ENV CONCOURSE_WORKER_WORK_DIR         /worker-state
 # volume for non-aufs/etc. mount for baggageclaim's driver
 VOLUME /worker-state
 
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     btrfs-tools \
     ca-certificates \
     dumb-init \
@@ -36,6 +29,7 @@ RUN apt update && apt install -y \
     wget
 
 RUN wget -P /usr/local/concourse/bin/ https://github.com/selfhydro/concourse-arm/releases/download/v5.2.0/concourse_linux_arm
+RUN chmod +x /usr/local/concourse/bin/concourse_linux_arm
 
 STOPSIGNAL SIGUSR2
 
