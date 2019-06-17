@@ -1,0 +1,55 @@
+diff --git a/.dockerignore b/.dockerignore
+index d2e8d95..3c10c14 100644
+--- a/.dockerignore
++++ b/.dockerignore
+@@ -8,3 +8,4 @@
+ !/LICENSE
+ !/NOTICE.md
+ !/README.md
++!qemu-arm-static-3.0.0
+diff --git a/dockerfiles/alpine/Dockerfile b/dockerfiles/alpine/Dockerfile
+index b3c42ef..68f3f97 100644
+--- a/dockerfiles/alpine/Dockerfile
++++ b/dockerfiles/alpine/Dockerfile
+@@ -1,5 +1,7 @@
+ # stage: builder
+-FROM concourse/golang-builder AS builder
++FROM balenalib/armv7hf-alpine-golang AS builder
++COPY ./qemu-arm-static-3.0.0 /usr/bin/qemu-arm-static
++RUN [ "cross-build-start" ]
+
+ COPY . /go/src/github.com/concourse/docker-image-resource
+ ENV CGO_ENABLED 0
+@@ -11,9 +13,12 @@ RUN set -e; \
+     for pkg in $(go list ./...); do \
+       go test -o "/tests/$(basename $pkg).test" -c $pkg; \
+     done
++RUN [ "cross-build-end" ]
+
+ # stage: resource
+-FROM alpine:edge AS resource
++FROM balenalib/armv7hf-alpine:edge AS resource
++COPY ./qemu-arm-static-3.0.0 /usr/bin/qemu-arm-static
++RUN [ "cross-build-start" ]
+ RUN apk --no-cache add \
+       bash \
+       docker \
+@@ -24,9 +29,11 @@ RUN apk --no-cache add \
+     ;
+ COPY --from=builder /assets /opt/resource
+ RUN ln -s /opt/resource/ecr-login /usr/local/bin/docker-credential-ecr-login
++RUN [ "cross-build-end" ]
+
+ # stage: tests
+ FROM resource AS tests
++RUN [ "cross-build-start" ]
+ COPY --from=builder /tests /tests
+ ADD . /docker-image-resource
+ RUN set -e; \
+@@ -34,5 +41,6 @@ RUN set -e; \
+       $test -ginkgo.v; \
+     done
+
++RUN [ "cross-build-end" ]
+ # final output stage
+ FROM resource

@@ -1,0 +1,31 @@
+diff --git a/dockerfiles/alpine/Dockerfile b/dockerfiles/alpine/Dockerfile
+index 9058a35..d39c89e 100644
+--- a/dockerfiles/alpine/Dockerfile
++++ b/dockerfiles/alpine/Dockerfile
+@@ -1,4 +1,6 @@
+-FROM alpine:edge AS resource
++FROM balenalib/armv7hf-alpine:edge AS resource
++COPY ./qemu-arm-static-3.0.0 /usr/bin/qemu-arm-static
++RUN [ "cross-build-start" ]
+
+ RUN apk --no-cache add \
+   bash \
+@@ -189,15 +191,14 @@ WORKDIR         /usr/lib
+ RUN             rm -rf \
+                     perl \
+                     perl5
+-
+-FROM resource AS tests
+-ADD test/ /tests
+-RUN /tests/all.sh
++RUN [ "cross-build-end" ]
+
+ FROM resource AS integrationtests
++RUN [ "cross-build-start" ]
+ RUN apk --no-cache add squid
+ ADD test/ /tests/test
+ ADD integration-tests /tests/integration-tests
+ RUN /tests/integration-tests/integration.sh
++RUN [ "cross-build-end" ]
+
+ FROM resource

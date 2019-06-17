@@ -1,0 +1,35 @@
+diff --git a/dockerfiles/alpine/Dockerfile b/dockerfiles/alpine/Dockerfile
+index 014c96f..eaf11d7 100644
+--- a/dockerfiles/alpine/Dockerfile
++++ b/dockerfiles/alpine/Dockerfile
+@@ -1,4 +1,6 @@
+-FROM golang:alpine as builder
++FROM balenalib/armv7hf-alpine-golang as builder
++COPY ./qemu-arm-static-3.0.0 /usr/bin/qemu-arm-static
++RUN [ "cross-build-start" ]
+ COPY . /go/src/github.com/concourse/time-resource
+ ENV CGO_ENABLED 0
+ RUN go build -o /assets/out github.com/concourse/time-resource/out
+@@ -7,15 +9,21 @@ RUN go build -o /assets/check github.com/concourse/time-resource/check
+ RUN set -e; for pkg in $(go list ./...); do \
+                go test -o "/tests/$(basename $pkg).test" -c $pkg; \
+        done
++RUN [ "cross-build-end" ]
+
+-FROM alpine:edge AS resource
++FROM balenalib/armv7hf-alpine:edge AS resource
++COPY ./qemu-arm-static-3.0.0 /usr/bin/qemu-arm-static
++RUN [ "cross-build-start" ]
+ RUN apk add --update bash tzdata
+ COPY --from=builder /assets /opt/resource
++RUN [ "cross-build-end" ]
+
+ FROM resource AS tests
++RUN [ "cross-build-start" ]
+ COPY --from=builder /tests /tests
+ RUN set -e; for test in /tests/*.test; do \
+                $test; \
+        done
++RUN [ "cross-build-end" ]
+
+ FROM resource

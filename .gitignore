@@ -1,3 +1,5 @@
 workdir-arm
 workdir-aarch64
+workdir-arm64
+linux-rc
 output

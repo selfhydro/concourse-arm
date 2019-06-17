@@ -1,5 +1,7 @@
 FROM arm32v7/debian
 
+
+
 # 'web' keys
 ENV CONCOURSE_SESSION_SIGNING_KEY     /concourse-keys/session_signing_key
 ENV CONCOURSE_TSA_AUTHORIZED_KEYS     /concourse-keys/authorized_worker_keys
@@ -28,9 +30,11 @@ RUN apt-get update && apt-get install -y \
     file \
     wget
 
-RUN wget -P /usr/local/concourse/bin/ https://github.com/selfhydro/concourse-arm/releases/download/v5.2.0/concourse_linux_arm
-RUN chmod +x /usr/local/concourse/bin/concourse_linux_arm
+COPY *.tgz /tmp
+RUN tar xzf /tmp/*.tgz -C . && mv ./linux-rc /usr/local
+
+RUN ls -laR /usr/local/
 
 STOPSIGNAL SIGUSR2
 
-ENTRYPOINT ["dumb-init", "/usr/local/concourse/bin/concourse_linux_arm"]
+ENTRYPOINT ["dumb-init", "/usr/local/concourse_linux_arm"]

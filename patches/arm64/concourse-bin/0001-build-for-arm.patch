@@ -1,0 +1,81 @@
+diff --git a/Dockerfile b/Dockerfile
+index b0191ae..7ff78bf 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,12 +1,16 @@
+-FROM golang:1
++FROM balenalib/armv7hf-golang:1
++COPY ./qemu-arm-static-3.0.0 /usr/bin/qemu-arm-static
++RUN [ "cross-build-start" ]
+ 
+ # install Go BOSH CLI
+-ADD https://s3.amazonaws.com/dk-shared-assets/cli-linux-feb11 /usr/local/bin/bosh
+-RUN chmod +x /usr/local/bin/bosh
++# ADD https://s3.amazonaws.com/dk-shared-assets/cli-linux-feb11 /usr/local/bin/bosh
++# RUN chmod +x /usr/local/bin/bosh
+ 
+ # directory in which to place prebuilt assets vendored by the concourse binary
+ RUN mkdir /opt/static-assets
+ 
++RUN apt-get update && \
++      apt-get -y install curl
+ # pre-build `tar` so we don't have to every time
+ RUN cd /tmp && curl -L https://ftp.gnu.org/gnu/tar/tar-1.30.tar.gz | tar zxf - && \
+       cd tar-* && \
+@@ -53,12 +57,12 @@ RUN set -x && \
+ RUN set -x && \
+       apt-get update && \
+       apt-get -y install liblzo2-dev libblkid-dev e2fslibs-dev libz-dev libzstd-dev && \
+-      cp /usr/lib/gcc/x86_64-linux-gnu/6/crtbeginS.o /usr/lib/gcc/x86_64-linux-gnu/6/crtbeginT.o && \
++      cp /usr/lib/gcc/arm-linux-gnueabihf/6/crtbeginS.o /usr/lib/gcc/arm-linux-gnueabihf/6/crtbeginT.o && \
+       cd /tmp && \
+       curl -L https://www.kernel.org/pub/linux/kernel/people/kdave/btrfs-progs/btrfs-progs-v4.15.tar.gz | tar zxf - && \
+       cd btrfs-progs-* && \
+       LDFLAGS=-static ./configure --disable-documentation && \
+-      make && \
++      make btrfs mkfs.btrfs && \
+       cp btrfs mkfs.btrfs /opt/static-assets && \
+       cd /tmp && \
+       rm -rf btrfs-progs-* && \
+@@ -74,3 +78,5 @@ RUN set -x && \
+         make install && \
+       cd /tmp && \
+       rm -rf libseccomp-*
++
++RUN [ "cross-build-end" ]
+diff --git a/ci/build-linux b/ci/build-linux
+index 317af35..a65729f 100755
+--- a/ci/build-linux
++++ b/ci/build-linux
+@@ -23,7 +23,7 @@ cd binary
+ go build \
+   -tags daemon \
+   -ldflags "-X main.Version=${FINAL_VERSION} -X github.com/concourse/atc/atccmd.Version=${FINAL_VERSION} -X github.com/concourse/atc/atccmd.WorkerVersion=${WORKER_VERSION} -X main.WorkerVersion=${WORKER_VERSION}" \
+-  -o concourse_linux_amd64 \
++  -o "concourse_linux_$(go env GOARCH)" \
+   github.com/concourse/bin/cmd/concourse
+ 
+-sha1sum concourse_linux_amd64 > concourse_linux_amd64.sha1
++sha1sum "concourse_linux_$(go env GOARCH)" > "concourse_linux_$(go env GOARCH).sha1"
+diff --git a/scripts/build-linux b/scripts/build-linux
+index fac35e4..b4ca1ab 100755
+--- a/scripts/build-linux
++++ b/scripts/build-linux
+@@ -22,7 +22,7 @@ cp -aL /opt/static-assets/iptables/sbin/iptables $ASSETS_DIR/iptables/sbin/iptab
+ 
+ pushd garden-runc-release/
+   # workaround 'mv /root/.tmp/... /tmp/...: invalid cross-device link'
+-  HOME=$PWD bosh sync-blobs
++  # HOME=$PWD bosh sync-blobs
+ 
+   (
+     set -e -u -x
+@@ -53,7 +53,7 @@ popd
+ 
+ pushd concourse/
+   # workaround 'mv /root/.tmp/... /tmp/...: invalid cross-device link'
+-  HOME=$PWD bosh sync-blobs
++  # HOME=$PWD bosh sync-blobs
+ 
+   mkdir -p $ASSETS_DIR/resources
+ 
