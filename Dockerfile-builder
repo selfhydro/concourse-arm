@@ -1,0 +1,30 @@
+FROM golang
+
+RUN apt-get update && \
+ apt-get -y install git libc6-armel-cross \
+ libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev \
+ build-essential bison flex libssl-dev wget software-properties-common
+
+# install Node 8.x
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
+RUN apt-get update && apt-get install -y nodejs
+
+# install Yarn for web UI tests
+RUN curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN add-apt-repository "deb https://dl.yarnpkg.com/debian/ stable main"
+RUN apt-get update && apt-get -y install yarn
+
+RUN mkdir -p workdir-arm
+
+COPY fly-build workdir-arm/
+COPY concourse-build workdir-arm/
+COPY yarn-build workdir-arm/
+COPY build.sh .
+
+RUN go get -u github.com/gobuffalo/packr/packr
+RUN go install github.com/gobuffalo/packr/packr
+RUN git clone https://github.com/raspberrypi/tools ~/tools
+
+ENV PATH="/root/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin:${PATH}"
+
+VOLUME output

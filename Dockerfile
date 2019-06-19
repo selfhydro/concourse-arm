@@ -30,11 +30,9 @@ RUN apt-get update && apt-get install -y \
     file \
     wget
 
-COPY *.tgz /tmp
-RUN tar xzf /tmp/*.tgz -C . && mv ./linux-rc /usr/local
-
-RUN ls -laR /usr/local/
+COPY output/linux-rc/*.tgz /tmp
+RUN tar xzf /tmp/*.tgz -C /usr/local
 
 STOPSIGNAL SIGUSR2
 
-ENTRYPOINT ["dumb-init", "/usr/local/concourse_linux_arm"]
+ENTRYPOINT ["dumb-init", "/usr/local/concourse/bin/concourse"]

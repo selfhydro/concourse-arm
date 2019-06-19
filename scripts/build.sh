@@ -79,32 +79,6 @@ pushd "$workdir"
 
 	# get concourse
 	[ -d "concourse" ] || git clone --branch="$VERSION" --recursive 'https://github.com/concourse/concourse'
-	# pushd ./concourse/src/github.com/concourse/baggageclaim
-	# 	git reset --hard
-	# 	for patch in "$base/patches/$arch/baggageclaim/"*; do
-	# 		[[ -e $patch ]] || break
-	# 		git apply < "$patch"
-	# 	done
-	# popd
-
-	# # get garden-runc
-	# garden_tag="v1.16.2"
-	# [ -d "garden-runc-release" ] || git clone --branch "$garden_tag" --recursive 'https://github.com/cloudfoundry/garden-runc-release'
-	# find garden-runc-release -path '*/vendor/golang.org/x/net/trace' -print0 | xargs -0 -n1 rm -r
-	# pushd ./garden-runc-release/src/code.cloudfoundry.org/guardian
-	# 	git reset --hard
-	# 	for patch in "$base/patches/$arch/guardian/"*; do
-	# 		[[ -e $patch ]] || break
-	# 		git apply < "$patch"
-	# 	done
-	# popd
-	# pushd ./garden-runc-release/src/code.cloudfoundry.org/idmapper
-	# 	git reset --hard
-	# 	for patch in "$base/patches/$arch/idmapper/"*; do
-	# 		[[ -e $patch ]] || break
-	# 		git apply < "$patch"
-	# 	done
-	# popd
 
 	# get final-version
 	mkdir -p final-version
@@ -112,11 +86,16 @@ pushd "$workdir"
 
 	# build fly-rc
 	mkdir -p linux-binary
-	# cp ./ci/tasks/scripts/fly-build .
 	./fly-build
 	rm -rf fly-rc
 	mv linux-binary fly-rc
 
+
+	# install gdn
+	wget -O /usr/local/bin/gdn https://github.com/cloudfoundry/garden-runc-release/releases/download/v1.19.1/gdn-1.19.1
+	chmod + /usr/local/bin/gdn
+	
+	./yarn-build
 	# build resource types
 	# build_resource_type "docker-image"
 	# build_resource_type "git"
@@ -129,16 +108,8 @@ pushd "$workdir"
 	# build concourse
 
 	mkdir -p binary
-	# cp ./ci/tasks/scripts/concourse-build .
-	./concourse-build linux
-	# docker run \
-	# 	-v "$PWD:$PWD" \
-	# 	-w "$PWD" \
-	# 	--rm \
-	# 	--entrypoint="qemu-$arch-static" \
-	# 	-e QEMU_EXECVE=1 \
-	# 	concourse-bin /bin/bash -c 'rm -rf cli-artifacts; ./ci/tasks/scripts/concourse-build linux'
-	rm -rf "$base/linux-rc"
-	mv binary "$base/linux-rc"
+	./concourse-build linux arm
 
+	rm -rf "output/linux-rc"
+	mv concourse-linux "/output/linux-rc"
 popd

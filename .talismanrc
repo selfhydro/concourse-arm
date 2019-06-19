@@ -1,0 +1,25 @@
+fileignoreconfig:
+- filename: patches/arm64/0001-driver-fix-build-issues-on-32bit-platforms.patch
+  checksum: 5847e50fe3ea7fc266e84bd4a4d39920c90eae76fd9abdac9e4373b3e7ec3882
+  ignore_detectors: []
+- filename: patches/arm64/0002-uidgid-fix-int-overflow-on-32bit-platforms.patch
+  checksum: 05bd92343c151818ce49574e615a425bd280af60b2866c67302b8bd7565f1a63
+  ignore_detectors: []
+- filename: patches/arm64/baggageclaim/0001-driver-fix-build-issues-on-32bit-platforms.patch
+  checksum: ecd5bdae3c7f5b85a9b7e2dc2ea61f0bc788cf1d857b27aa9a2f4fa02396fcbc
+  ignore_detectors: []
+- filename: patches/arm64/baggageclaim/0002-uidgid-fix-int-overflow-on-32bit-platforms.patch
+  checksum: 614ec3f40a5074fad0702ff2607e4e8214d1812a1db7131c2c04d6b8ee939d09
+  ignore_detectors: []
+- filename: patches/arm64/guardian/0001-guardiancmd-ensure-argument-is-an-int64.patch
+  checksum: 1800dd94867d230b8d263e0d97d5d0214129589a8c9c0a2e56a1eb3d46ff89a7
+  ignore_detectors: []
+- filename: patches/arm64/guardian/0002-fix-int-overflow-on-32bit-platforms.patch
+  checksum: 598fcdc2afbbfef64e91351d5557e01988112ef11bd3ca3eb117bdb03ab748fe
+  ignore_detectors: []
+- filename: patches/arm64/idmapper/0001-fix-int-overflow-on-32bit-platforms.patch
+  checksum: ef41104a915d532faed1f3b4167d7f527cdedebb8de376bed41d71e10d61becf
+  ignore_detectors: []
+- filename: patches/arm64/s3-resource/0001-build-for-arm.patch
+  checksum: fd3a1ef66b771db0dd6977919685444399b60a5e14a00de2fa4ff54cb107c116
+  ignore_detectors: []

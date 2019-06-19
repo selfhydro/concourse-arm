@@ -1,0 +1,67 @@
+#!/bin/bash
+# vim: set ft=sh
+
+set -e -x
+
+export GOPATH=$PWD/gopath
+export PATH=$PWD/gopath/bin:$PATH
+
+if [ "$#" -lt 1 ]; then
+  echo "usage: $0 <platform> $1 <arch>" >&2
+  exit 1
+fi
+
+platform="$1"
+arch="$2"
+
+archive=concourse-${platform}-${arch}.tgz
+if [ -e version/version ]; then
+  version="$(cat version/version)"
+  archive=concourse-${version}-${platform}-${arch}.tgz
+fi
+
+final_version=""
+ldflags=""
+if [ -e final-version/version ]; then
+  final_version="$(cat final-version/version)"
+  ldflags="-X github.com/concourse/concourse.Version=$final_version"
+fi
+export CGO_ENABLED=1
+export CC=arm-linux-gnueabihf-gcc
+export CXX=arm-linux-gnueabihf-g++
+export GOARM=7
+
+pushd concourse
+  packr build -o concourse -ldflags "$ldflags" ./cmd/concourse
+
+  # if [ -n "$final_version" ]; then
+  #   test "$(./concourse --version)" = "$final_version"
+  # fi
+popd
+
+output=concourse-${platform}
+
+mkdir -p $output/concourse
+
+bin=$output/concourse/bin
+mkdir -p $bin
+mv concourse/concourse $bin
+
+mkdir -p gdn
+cp /usr/local/bin/gdn gdn/gdn
+[ -d gdn ] && cp gdn/gdn $bin
+
+[ -d resource-types ] && cp -a resource-types $output/concourse
+
+fly_assets=$output/concourse/fly-assets
+mkdir $fly_assets
+[ -d fly-linux ] && cp -a fly-linux/fly-*.tgz $fly_assets
+[ -d fly-windows ] && cp -a fly-windows/fly-*.zip $fly_assets
+[ -d fly-darwin ] && cp -a fly-darwin/fly-*.tgz $fly_assets
+
+pushd $output
+  tar -czf $archive concourse
+  shasum "$archive" > "${archive}.sha1"
+
+  rm -r concourse
+popd
